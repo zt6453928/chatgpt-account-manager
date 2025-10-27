@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import {
@@ -113,66 +115,24 @@ export default function EasyAdd() {
 
     setStep("extracting");
     
-    // 打开一个新窗口执行提取脚本
-    const extractWindow = window.open(
-      "https://chat.openai.com",
-      "chatgpt_extract",
-      "width=600,height=400"
-    );
+    // 提示用户从剪贴板粘贴
+    toast.info("请从ChatGPT页面复制Token后，点击下方的粘贴按钮");
+  };
 
-    if (!extractWindow) {
-      toast.error("请允许弹出窗口");
-      setStep("login");
-      return;
-    }
-
-    // 等待窗口加载
-    setTimeout(() => {
-      try {
-        // 向窗口注入提取脚本
-        const script = `
-          (function() {
-            try {
-              const token = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('__Secure-next-auth.session-token='))
-                ?.split('=')[1];
-              
-              if (token) {
-                window.opener.postMessage({
-                  type: 'CHATGPT_TOKEN_EXTRACTED',
-                  token: token
-                }, '*');
-                window.close();
-              } else {
-                alert('未找到Session Token，请确保已登录ChatGPT');
-              }
-            } catch (error) {
-              alert('提取失败: ' + error.message);
-            }
-          })();
-        `;
-
-        // 监听消息
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data.type === "CHATGPT_TOKEN_EXTRACTED") {
-            setSessionToken(event.data.token);
-            handleTokenExtracted(event.data.token);
-            window.removeEventListener("message", handleMessage);
-          }
-        };
-
-        window.addEventListener("message", handleMessage);
-
-        // 提示用户在控制台执行脚本
-        toast.info("请在打开的窗口中按F12，在控制台粘贴并执行提取脚本");
-        
-      } catch (error) {
-        console.error("注入脚本失败:", error);
-        setError("提取Token失败，请重试");
-        setStep("login");
+  const handlePasteToken = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.length > 100) {
+        setSessionToken(text);
+        handleTokenExtracted(text);
+      } else {
+        toast.error("剪贴板中没有有效的Token");
       }
-    }, 2000);
+    } catch (error) {
+      toast.error("无法读取剪贴板，请手动粘贴Token");
+      // 显示手动输入框
+      setStep("login");
+    }
   };
 
   const handleTokenExtracted = async (token: string) => {
@@ -368,12 +328,57 @@ export default function EasyAdd() {
 
               {/* 提取状态 */}
               {step === "extracting" && (
-                <div className="text-center space-y-4">
-                  <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto" />
-                  <h3 className="text-xl font-semibold">正在提取Token...</h3>
-                  <p className="text-muted-foreground">
-                    请稍候，这可能需要几秒钟
-                  </p>
+                <div className="space-y-4">
+                  <Alert>
+                    <AlertDescription>
+                      <div className="space-y-3">
+                        <div className="font-semibold">请按以下步骤提取Token：</div>
+                        <ol className="list-decimal list-inside space-y-2 text-sm">
+                          <li>切换到ChatGPT标签页</li>
+                          <li>点击地址栏，粘贴下方的提取脚本</li>
+                          <li>按回车执行脚本</li>
+                          <li>Token会自动复制到剪贴板</li>
+                          <li>返回本页面，点击下方“粘贴Token”按钮</li>
+                        </ol>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-2">
+                    <Label>提取脚本（复制并在ChatGPT页面地址栏执行）</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value="javascript:(function(){const token=document.cookie.split('; ').find(row=>row.startsWith('__Secure-next-auth.session-token='))?.split('=')[1];if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{alert('❌ 未找到Token！\\n\\n请确保已登录ChatGPT。');}})();"
+                        readOnly
+                        className="font-mono text-xs"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText("javascript:(function(){const token=document.cookie.split('; ').find(row=>row.startsWith('__Secure-next-auth.session-token='))?.split('=')[1];if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{alert('❌ 未找到Token！\\n\\n请确保已登录ChatGPT。');}})();");
+                          toast.success("脚本已复制！");
+                        }}
+                      >
+                        复制脚本
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={handlePasteToken}
+                  >
+                    粘贴Token并添加账号
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setStep("login")}
+                  >
+                    返回上一步
+                  </Button>
                 </div>
               )}
 
