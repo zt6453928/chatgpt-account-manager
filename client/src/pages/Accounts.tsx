@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Plus, Trash2, Edit, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Eye, EyeOff, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -95,6 +95,31 @@ export default function Accounts() {
     },
   });
 
+  const verifyMutation = trpc.chatgpt.verify.useMutation({
+    onSuccess: (result) => {
+      if (result.isValid) {
+        toast.success(`验证成功! 账号类型: ${result.accountType?.toUpperCase()}`);
+      } else {
+        toast.error(`验证失败: ${result.error || "账号不可用"}`);
+      }
+      utils.chatgpt.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`验证失败: ${error.message}`);
+    },
+  });
+
+  const verifyAllMutation = trpc.chatgpt.verifyAll.useMutation({
+    onSuccess: (results) => {
+      const successCount = results.filter((r: any) => r.success).length;
+      toast.success(`批量验证完成: ${successCount}/${results.length} 个账号验证成功`);
+      utils.chatgpt.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`批量验证失败: ${error.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate(formData);
@@ -121,6 +146,16 @@ export default function Accounts() {
   const handleDelete = (id: number) => {
     if (confirm("确定要删除这个账号吗?")) {
       deleteMutation.mutate({ id });
+    }
+  };
+
+  const handleVerify = (id: number) => {
+    verifyMutation.mutate({ id });
+  };
+
+  const handleVerifyAll = () => {
+    if (confirm("确定要验证所有账号吗?（这可能需要一些时间）")) {
+      verifyAllMutation.mutate();
     }
   };
 
@@ -202,14 +237,29 @@ export default function Accounts() {
               管理您的所有ChatGPT账号，查看状态和类型
             </p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                添加账号
+          <div className="flex gap-2">
+            {accounts && accounts.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={handleVerifyAll}
+                disabled={verifyAllMutation.isPending}
+              >
+                {verifyAllMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                批量验证
               </Button>
-            </DialogTrigger>
-            <DialogContent>
+            )}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  添加账号
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>添加新账号</DialogTitle>
@@ -307,8 +357,9 @@ export default function Accounts() {
                   </Button>
                 </DialogFooter>
               </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {isLoading ? (
@@ -379,11 +430,23 @@ export default function Accounts() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(account)}
+                        onClick={() => handleVerify(account.id)}
+                        disabled={verifyMutation.isPending}
                         className="flex-1"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        编辑
+                        {verifyMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                        )}
+                        验证
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(account)}
+                      >
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="destructive"

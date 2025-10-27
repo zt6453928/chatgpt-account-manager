@@ -10,6 +10,7 @@ import {
   deleteChatGPTAccount,
   getChatGPTAccountById,
 } from "./db";
+import { verifyChatGPTAccount, verifyWithSessionToken } from "./chatgpt-verifier";
 
 export const appRouter = router({
   system: systemRouter,
@@ -83,6 +84,87 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return await getChatGPTAccountById(input.id, ctx.user.id);
       }),
+
+    // 验证账号状态和类型
+    verify: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          useSessionToken: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        // 获取账号信息
+        const account = await getChatGPTAccountById(input.id, ctx.user.id);
+        if (!account) {
+          throw new Error("账号不存在");
+        }
+
+        // 执行验证
+        const result = input.useSessionToken
+          ? await verifyWithSessionToken(account.password)
+          : await verifyChatGPTAccount(account.email, account.password);
+
+        // 更新账号信息
+        if (result.isValid && result.accountType) {
+          await updateChatGPTAccount(input.id, ctx.user.id, {
+            accountType: result.accountType,
+            status: result.status,
+            lastVerified: new Date(),
+            expiresAt: result.details?.expiresAt,
+          });
+        } else {
+          await updateChatGPTAccount(input.id, ctx.user.id, {
+            status: result.status,
+            lastVerified: new Date(),
+          });
+        }
+
+        return result;
+      }),
+
+    // 批量验证账号
+    verifyAll: protectedProcedure.mutation(async ({ ctx }) => {
+      const accounts = await getUserChatGPTAccounts(ctx.user.id);
+      const results = [];
+
+      for (const account of accounts) {
+        try {
+          const result = await verifyChatGPTAccount(account.email, account.password);
+          
+          if (result.isValid && result.accountType) {
+            await updateChatGPTAccount(account.id, ctx.user.id, {
+              accountType: result.accountType,
+              status: result.status,
+              lastVerified: new Date(),
+              expiresAt: result.details?.expiresAt,
+            });
+          } else {
+            await updateChatGPTAccount(account.id, ctx.user.id, {
+              status: result.status,
+              lastVerified: new Date(),
+            });
+          }
+
+          results.push({
+            id: account.id,
+            email: account.email,
+            success: result.isValid,
+            accountType: result.accountType,
+            status: result.status,
+          });
+        } catch (error) {
+          results.push({
+            id: account.id,
+            email: account.email,
+            success: false,
+            error: error instanceof Error ? error.message : "未知错误",
+          });
+        }
+      }
+
+      return results;
+    }),
   }),
 });
 
