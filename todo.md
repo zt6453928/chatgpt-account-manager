@@ -42,3 +42,13 @@
 - [x] 在前端添加“验证账号”按钮
 - [x] 添加批量验证功能
 
+
+
+## 改进：应用内登录验证
+- [x] 实现应用内ChatGPT登录界面
+- [x] 获取登录后的session token
+- [x] 通过session API获取真实账号信息
+- [x] 正确识别账号类型（Free/Plus/Pro）
+- [x] 正确检测账号可用性
+- [x] 自动保存session token
+

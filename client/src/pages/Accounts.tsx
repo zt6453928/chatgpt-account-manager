@@ -29,15 +29,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Plus, Trash2, Edit, Eye, EyeOff, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Eye, EyeOff, RefreshCw, CheckCircle2, Key } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import ChatGPTLogin from "./ChatGPTLogin";
 
 export default function Accounts() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
 
@@ -159,6 +161,31 @@ export default function Accounts() {
     }
   };
 
+  const handleLoginSuccess = async (sessionToken: string, email: string) => {
+    // 使用session token作为密码添加账号
+    try {
+      const account = await createMutation.mutateAsync({
+        email,
+        password: sessionToken,
+        accountType: "free", // 默认为free，验证时会自动更新
+        status: "inactive", // 默认为inactive，验证时会自动更新
+        notes: "通过Session Token添加",
+      });
+      
+      // 添加成功后立即验证账号
+      if (account && account.id) {
+        toast.info("正在验证账号...");
+        setTimeout(() => {
+          verifyMutation.mutate({ id: account.id });
+        }, 500);
+      }
+      
+      setIsLoginDialogOpen(false);
+    } catch (error) {
+      console.error("添加账号失败:", error);
+    }
+  };
+
   const togglePasswordVisibility = (id: number) => {
     setShowPassword((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -252,11 +279,15 @@ export default function Accounts() {
                 批量验证
               </Button>
             )}
+            <Button onClick={() => setIsLoginDialogOpen(true)}>
+              <Key className="h-4 w-4 mr-2" />
+              登录添加账号
+            </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
-                  添加账号
+                  手动添加
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -585,6 +616,22 @@ export default function Accounts() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ChatGPT登录对话框 */}
+      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>通过ChatGPT登录添加账号</DialogTitle>
+            <DialogDescription>
+              登录后系统将自动获取账号信息并验证账号类型
+            </DialogDescription>
+          </DialogHeader>
+          <ChatGPTLogin
+            onSuccess={handleLoginSuccess}
+            onCancel={() => setIsLoginDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

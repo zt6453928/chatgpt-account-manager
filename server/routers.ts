@@ -11,6 +11,7 @@ import {
   getChatGPTAccountById,
 } from "./db";
 import { verifyChatGPTAccount, verifyWithSessionToken } from "./chatgpt-verifier";
+import { verifyAccountWithSession, getAccountDetails } from "./chatgpt-auth";
 
 export const appRouter = router({
   system: systemRouter,
@@ -100,18 +101,17 @@ export const appRouter = router({
           throw new Error("账号不存在");
         }
 
-        // 执行验证
-        const result = input.useSessionToken
-          ? await verifyWithSessionToken(account.password)
-          : await verifyChatGPTAccount(account.email, account.password);
+        // 执行验证 - 使用真实的session token验证
+        const result = await verifyAccountWithSession(account.password);
 
         // 更新账号信息
         if (result.isValid && result.accountType) {
           await updateChatGPTAccount(input.id, ctx.user.id, {
+            email: result.email || account.email,
             accountType: result.accountType,
             status: result.status,
             lastVerified: new Date(),
-            expiresAt: result.details?.expiresAt,
+            expiresAt: result.expiresAt,
           });
         } else {
           await updateChatGPTAccount(input.id, ctx.user.id, {
@@ -130,14 +130,15 @@ export const appRouter = router({
 
       for (const account of accounts) {
         try {
-          const result = await verifyChatGPTAccount(account.email, account.password);
+          const result = await verifyAccountWithSession(account.password);
           
           if (result.isValid && result.accountType) {
             await updateChatGPTAccount(account.id, ctx.user.id, {
+              email: result.email || account.email,
               accountType: result.accountType,
               status: result.status,
               lastVerified: new Date(),
-              expiresAt: result.details?.expiresAt,
+              expiresAt: result.expiresAt,
             });
           } else {
             await updateChatGPTAccount(account.id, ctx.user.id, {
