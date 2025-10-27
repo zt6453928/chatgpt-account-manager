@@ -283,11 +283,10 @@ export default function Accounts() {
               <Key className="h-4 w-4 mr-2" />
               登录添加
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/quick-add">
+            <Button variant="default" asChild>
+              <Link href="/easy-add">
                 <a className="flex items-center">
-                  <Smartphone className="h-4 w-4 mr-2" />
-                  移动端
+                  ✨ 简易添加
                 </a>
               </Link>
             </Button>

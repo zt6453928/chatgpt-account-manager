@@ -62,8 +62,8 @@ export default function Home() {
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild>
-                    <Link href="/quick-add">
-                      <a>📱 移动端快速添加</a>
+                    <Link href="/easy-add">
+                      <a>✨ 简易添加</a>
                     </Link>
                   </Button>
                 </>

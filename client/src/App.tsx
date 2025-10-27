@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import QuickAdd from "./pages/QuickAdd";
+import EasyAdd from "./pages/EasyAdd";
 import Accounts from "./pages/Accounts";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/accounts"} component={Accounts} />
       <Route path={"/quick-add"} component={QuickAdd} />
+      <Route path={"/easy-add"} component={EasyAdd} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
