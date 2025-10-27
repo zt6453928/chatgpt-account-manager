@@ -30,7 +30,8 @@
 - [x] 创建GitHub仓库
 - [x] 推送代码到GitHub
 - [x] 创建部署检查点
-- [ ] 发布到平台
+- [x] 更新真实验证功能
+- [ ] 发布到平台(用户手动点击Publish按钮)
 
 
 
@@ -51,4 +52,13 @@
 - [x] 正确识别账号类型（Free/Plus/Pro）
 - [x] 正确检测账号可用性
 - [x] 自动保存session token
+
+
+
+## 移动端自动提取Session Token
+- [x] 创建书签脚本(bookmarklet)自动提取token
+- [x] 创建独立的快速添加页面
+- [x] 实现自动提取并返回token的JavaScript脚本
+- [x] 优化移动端操作流程
+- [x] 添加一键复制功能
 

@@ -53,13 +53,20 @@ export default function Home() {
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               安全、高效地管理您的所有ChatGPT账号。实时查看账号状态、类型和过期信息，让账号管理变得简单。
             </p>
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               {isAuthenticated ? (
-                <Button size="lg" asChild>
-                  <Link href="/accounts">
-                    <a>进入控制台</a>
-                  </Link>
-                </Button>
+                <>
+                  <Button size="lg" asChild>
+                    <Link href="/accounts">
+                      <a>进入控制台</a>
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <Link href="/quick-add">
+                      <a>📱 移动端快速添加</a>
+                    </Link>
+                  </Button>
+                </>
               ) : (
                 <Button size="lg" asChild>
                   <a href={getLoginUrl()}>立即开始</a>

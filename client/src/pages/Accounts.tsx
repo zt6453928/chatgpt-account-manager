@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Plus, Trash2, Edit, Eye, EyeOff, RefreshCw, CheckCircle2, Key } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Eye, EyeOff, RefreshCw, CheckCircle2, Key, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -281,7 +281,15 @@ export default function Accounts() {
             )}
             <Button onClick={() => setIsLoginDialogOpen(true)}>
               <Key className="h-4 w-4 mr-2" />
-              登录添加账号
+              登录添加
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/quick-add">
+                <a className="flex items-center">
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  移动端
+                </a>
+              </Link>
             </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
