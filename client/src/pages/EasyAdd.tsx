@@ -283,13 +283,17 @@ export default function EasyAdd() {
                   <Alert>
                     <AlertDescription>
                       <div className="space-y-2">
+                        <div className="font-semibold text-orange-500">⚠️ 重要：必须使用Safari浏览器！</div>
                         <div className="font-semibold">请按照以下步骤操作：</div>
                         <ol className="list-decimal list-inside space-y-1 text-sm">
-                          <li>点击下方按钮打开ChatGPT登录页面</li>
-                          <li>在新窗口中登录您的ChatGPT账号</li>
+                          <li>点击下方按钮在<strong>Safari浏览器</strong>中打开ChatGPT</li>
+                          <li>登录您的ChatGPT账号（不要使用App）</li>
                           <li>登录成功后，返回本页面</li>
-                          <li>点击"我已登录完成"按钮</li>
+                          <li>点击“我已登录完成”按钮</li>
                         </ol>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          💡 如果点击后打开的是ChatGPT App，请长按链接选择“在Safari中打开”
+                        </div>
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -332,14 +336,18 @@ export default function EasyAdd() {
                   <Alert>
                     <AlertDescription>
                       <div className="space-y-3">
+                        <div className="font-semibold text-orange-500">⚠️ 确保您在Safari浏览器中打开的chat.openai.com！</div>
                         <div className="font-semibold">请按以下步骤提取Token：</div>
                         <ol className="list-decimal list-inside space-y-2 text-sm">
-                          <li>切换到ChatGPT标签页</li>
+                          <li>切换到<strong>Safari浏览器</strong>的ChatGPT标签页</li>
                           <li>点击地址栏，粘贴下方的提取脚本</li>
                           <li>按回车执行脚本</li>
                           <li>Token会自动复制到剪贴板</li>
                           <li>返回本页面，点击下方“粘贴Token”按钮</li>
                         </ol>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          ❌ 不能在ChatGPT App中执行，必须使用Safari浏览器！
+                        </div>
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -348,14 +356,14 @@ export default function EasyAdd() {
                     <Label>提取脚本（复制并在ChatGPT页面地址栏执行）</Label>
                     <div className="flex gap-2">
                       <Input
-                        value="javascript:(function(){const token=document.cookie.split('; ').find(row=>row.startsWith('__Secure-next-auth.session-token='))?.split('=')[1];if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{alert('❌ 未找到Token！\\n\\n请确保已登录ChatGPT。');}})();"
+                        value="javascript:(function(){const cookies=document.cookie.split('; ');const tokenNames=['__Secure-next-auth.session-token','next-auth.session-token','session-token'];let token=null;for(const name of tokenNames){const cookie=cookies.find(row=>row.startsWith(name+'='));if(cookie){token=cookie.split('=')[1];break;}}if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{const domain=window.location.hostname;const isApp=navigator.userAgent.includes('ChatGPT');alert('❌ 未找到Token！\\n\\n原因：'+(isApp?'您使用的是移动应用，请使用Safari浏览器访问 chat.openai.com':domain!=='chat.openai.com'&&domain!=='chatgpt.com'?'请在 chat.openai.com 域名下执行此脚本':'请确保已登录ChatGPT'));}})();"
                         readOnly
                         className="font-mono text-xs"
                       />
                       <Button
                         variant="outline"
                         onClick={() => {
-                          navigator.clipboard.writeText("javascript:(function(){const token=document.cookie.split('; ').find(row=>row.startsWith('__Secure-next-auth.session-token='))?.split('=')[1];if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{alert('❌ 未找到Token！\\n\\n请确保已登录ChatGPT。');}})();");
+                          navigator.clipboard.writeText("javascript:(function(){const cookies=document.cookie.split('; ');const tokenNames=['__Secure-next-auth.session-token','next-auth.session-token','session-token'];let token=null;for(const name of tokenNames){const cookie=cookies.find(row=>row.startsWith(name+'='));if(cookie){token=cookie.split('=')[1];break;}}if(token){navigator.clipboard.writeText(token).then(()=>alert('✅ Token已复制！\\n\\n请返回账号管理页面粘贴。'));}else{const domain=window.location.hostname;const isApp=navigator.userAgent.includes('ChatGPT');alert('❌ 未找到Token！\\n\\n原因：'+(isApp?'您使用的是移动应用，请使用Safari浏览器访问 chat.openai.com':domain!=='chat.openai.com'&&domain!=='chatgpt.com'?'请在 chat.openai.com 域名下执行此脚本':'请确保已登录ChatGPT'));}})();");
                           toast.success("脚本已复制！");
                         }}
                       >
